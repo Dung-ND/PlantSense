@@ -1,7 +1,7 @@
-import type { Product } from "@/data/products";
+import type { Product } from "@/lib/products/schema";
 
 /** Clean vector stand-ins shown until real product photos are added. */
-export function ProductIllustration({ kind, className }: { kind: Product["illustration"]; className?: string }) {
+export function ProductIllustration({ kind, className }: { kind: NonNullable<Product["illustration"]>; className?: string }) {
   return (
     <svg viewBox="0 0 240 200" className={className} role="img" aria-hidden="true">
       <defs>

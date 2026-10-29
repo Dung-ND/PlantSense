@@ -3,23 +3,26 @@
 import Link from "next/link";
 import { useState } from "react";
 import { ArrowRight } from "lucide-react";
-import { products, type Product } from "@/data/products";
+import type { Product } from "@/lib/products/schema";
 import { formatPrice } from "@/lib/format";
-import { ProductMedia } from "@/components/ProductMedia";
+import { ProductMedia, mediaOf } from "@/components/ProductMedia";
 import { AddToCartButton } from "@/components/AddToCartButton";
 
 type Source = "tap" | "no-tap";
 type Size = "few" | "many";
 
-function recommend(source: Source, size: Size): Product | undefined {
-  if (source === "tap") return products.find((p) => p.sku === "HCT-322");
-  return products.find((p) => p.sku === (size === "many" ? "BSV-IC006" : "BSV-IC305"));
+/** Tap → cheapest tap product. No tap → cheapest reservoir kit for a few pots, the biggest (priciest) for many. */
+function recommend(products: Product[], source: Source, size: Size): Product | undefined {
+  const pool = products
+    .filter((p) => p.inStock && p.waterSource === (source === "tap" ? "tap" : "reservoir"))
+    .toSorted((a, b) => a.price - b.price);
+  return source === "no-tap" && size === "many" ? pool.at(-1) : pool[0];
 }
 
-export function KitFinder() {
+export function KitFinder({ products }: { products: Product[] }) {
   const [source, setSource] = useState<Source | null>(null);
   const [size, setSize] = useState<Size | null>(null);
-  const result = source && (source === "tap" || size) ? recommend(source, size ?? "few") : undefined;
+  const result = source && (source === "tap" || size) ? recommend(products, source, size ?? "few") : undefined;
 
   return (
     <div className="mt-8 grid gap-6 lg:grid-cols-2">
@@ -51,7 +54,7 @@ export function KitFinder() {
       <div aria-live="polite">
         {result ? (
           <div className="card animate-fade-up overflow-hidden sm:flex">
-            <ProductMedia product={result} sizes="(min-width: 640px) 240px, 100vw" className="sm:w-56 sm:shrink-0" />
+            <ProductMedia product={mediaOf(result)} sizes="(min-width: 640px) 240px, 100vw" className="sm:w-56 sm:shrink-0" />
             <div className="flex flex-col p-6">
               <p className="eyebrow">We recommend</p>
               <h3 className="mt-1 font-display text-2xl font-semibold">{result.name}</h3>

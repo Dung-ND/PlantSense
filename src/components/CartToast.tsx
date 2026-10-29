@@ -3,12 +3,13 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { CircleCheck, X } from "lucide-react";
-import { getProduct } from "@/data/products";
 import { useCart } from "@/lib/cart";
+import { useCatalog } from "@/lib/catalog-context";
 
 /** Confirms "added to cart" without navigating away, with a shortcut to the cart. */
 export function CartToast() {
   const { lastAdded, count } = useCart();
+  const { bySlug } = useCatalog();
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
@@ -19,7 +20,7 @@ export function CartToast() {
     return () => clearTimeout(t);
   }, [lastAdded]);
 
-  const product = lastAdded ? getProduct(lastAdded.slug) : undefined;
+  const product = lastAdded ? bySlug.get(lastAdded.slug) : undefined;
 
   return (
     <div aria-live="polite" className="pointer-events-none fixed inset-x-0 top-20 z-50 flex justify-center px-4 sm:top-auto sm:bottom-6 sm:justify-start sm:px-6">

@@ -1,20 +1,22 @@
 import "server-only";
 import type { ChatCompletionTool } from "openai/resources/chat/completions";
 import { site } from "@/config/site";
-import { categories, products } from "@/data/products";
+import { categoryLabel, type Product } from "@/lib/products/schema";
 import { faqs } from "@/data/faqs";
 import { formatPrice } from "@/lib/format";
 
-function catalogForPrompt() {
+function catalogForPrompt(products: Product[]) {
   return products
     .map((p) =>
       [
         `### ${p.name} (SKU ${p.sku}) — ${formatPrice(p.price)}${p.inStock ? "" : " — OUT OF STOCK"}`,
         `Link: /products/${p.slug}`,
-        `Type: ${categories[p.category].label}. ${p.summary}`,
+        `Type: ${categoryLabel(p.category)}. ${p.summary}`,
+        p.description.length ? `Description: ${p.description.join(" ")}` : "",
         `Best for: ${p.bestFor.join("; ")}`,
         `Specs: ${p.specs.map((s) => `${s.label}: ${s.value}`).join("; ")}`,
         `In the box: ${p.inTheBox.join(", ")}`,
+        p.videos.length ? `Videos: ${p.videos.map((v) => `${v.title || "video"} ${v.url}`).join("; ")}` : "",
         p.assistantNotes ? `Notes: ${p.assistantNotes}` : "",
       ]
         .filter(Boolean)
@@ -23,7 +25,7 @@ function catalogForPrompt() {
     .join("\n\n");
 }
 
-export function buildSystemPrompt(pagePath?: string) {
+export function buildSystemPrompt(products: Product[], pagePath?: string) {
   return `You are "Sprout", the friendly shopping assistant for ${site.name}, an online shop selling automatic watering devices for home gardeners.
 
 ## Your goals, in order
@@ -57,14 +59,14 @@ Contact: ${site.contact.email}, ${site.contact.phone}, ${site.contact.hours}.
 Pages: catalog /products, cart /cart, checkout /checkout, FAQ /faq, contact /contact.
 
 ## Products
-${catalogForPrompt()}
+${catalogForPrompt(products)}
 
 ## FAQ
 ${faqs.map((f) => `Q: ${f.q}\nA: ${f.a}`).join("\n\n")}
 ${pagePath ? `\nThe visitor is currently on page: ${pagePath}` : ""}`;
 }
 
-export const assistantTools: ChatCompletionTool[] = [
+export const assistantTools = (products: Product[]): ChatCompletionTool[] => [
   {
     type: "function",
     function: {

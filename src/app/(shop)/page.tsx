@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { ArrowRight, Check, Droplets, Leaf, Plane, RotateCcw, ShieldCheck, Timer, Truck, Wrench } from "lucide-react";
 import { site } from "@/config/site";
-import { products } from "@/data/products";
+import { getProducts } from "@/lib/products/catalog";
 import { faqs } from "@/data/faqs";
 import { formatPrice } from "@/lib/format";
 import { ProductCard } from "@/components/ProductCard";
@@ -9,7 +9,8 @@ import { ProductIllustration } from "@/components/ProductIllustration";
 import { KitFinder } from "@/components/KitFinder";
 import { FaqList } from "@/components/FaqList";
 
-export default function HomePage() {
+export default async function HomePage() {
+  const products = await getProducts();
   return (
     <>
       {/* Hero */}
@@ -106,7 +107,7 @@ export default function HomePage() {
             <p className="eyebrow">Not sure?</p>
             <h2 id="finder-title" className="mt-2 font-display text-3xl font-semibold sm:text-4xl">Find your kit in two questions</h2>
           </div>
-          <KitFinder />
+          <KitFinder products={products} />
         </div>
       </section>
 
@@ -156,7 +157,7 @@ export default function HomePage() {
                   <th scope="row" className="p-4 font-semibold">
                     <Link href={`/products/${p.slug}`} className="text-leaf-700 hover:underline">{p.shortName}</Link>
                   </th>
-                  <td className="p-4">{p.waterSource === "tap" ? "Outdoor tap" : "Bucket, tank or barrel"}</td>
+                  <td className="p-4">{p.waterSource === "tap" ? "Outdoor tap" : p.waterSource === "reservoir" ? "Bucket, tank or barrel" : "—"}</td>
                   <td className="p-4">
                     <ul className="space-y-1">
                       {p.bestFor.map((b) => (

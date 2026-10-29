@@ -1,62 +1,14 @@
 /**
- * Product catalog.
- *
- * To add a new device, append an object to `products` below. Everything else
- * (catalog, filters, product page, comparison table, sitemap, chatbot
- * knowledge) picks it up automatically.
- *
- * Photos: put files in /public/products/ and list them in `images`
- * (e.g. "/products/hct-322-front.jpg"). Without photos an illustration is shown.
- *
- * NOTE: prices and any spec marked "verify" are placeholders — check them
- * against your supplier's datasheet before going live.
+ * Starting catalog. These products are copied into the database the first
+ * time the site starts (when the products table is empty). After that,
+ * manage products from /admin — editing this file has no effect.
  */
+import type { ProductInput } from "@/lib/products/schema";
 
-export type Category = "timer" | "reservoir-kit";
-export type WaterSource = "tap" | "reservoir";
-
-export interface Product {
-  slug: string;
-  sku: string;
-  name: string;
-  shortName: string;
-  category: Category;
-  waterSource: WaterSource;
-  price: number;
-  compareAtPrice?: number;
-  inStock: boolean;
-  badge?: string;
-  summary: string;
-  description: string[];
-  bestFor: string[];
-  highlights: { title: string; text: string }[];
-  specs: { label: string; value: string }[];
-  inTheBox: string[];
-  images: string[];
-  illustration: "timer" | "kit" | "kit-large";
-  /** Extra facts only the chatbot sees (setup tips, caveats). */
-  assistantNotes?: string;
-}
-
-export const categories: Record<Category, { label: string; description: string }> = {
-  timer: {
-    label: "Tap timers",
-    description: "Screw onto an outdoor tap and water on a schedule.",
-  },
-  "reservoir-kit": {
-    label: "Reservoir drip kits",
-    description: "No tap needed — a pump draws from a tank or bucket.",
-  },
-};
-
-export const waterSources: Record<WaterSource, string> = {
-  tap: "Connects to a tap",
-  reservoir: "Runs from a reservoir",
-};
-
-export const products: Product[] = [
+export const seedProducts: ProductInput[] = [
   {
     slug: "hct-322-automatic-water-timer",
+    sortOrder: 10,
     sku: "HCT-322",
     name: "HCT-322 Automatic Water Timer",
     shortName: "HCT-322 Timer",
@@ -91,12 +43,15 @@ export const products: Product[] = [
     ],
     inTheBox: ["HCT-322 timer", "Tap adapters", "Hose connector", "Rubber washers", "User manual"],
     images: [],
+    videos: [],
+    status: "published",
     illustration: "timer",
     assistantNotes:
       "Needs mains water pressure from a tap — not suitable for balconies without a tap (suggest a reservoir kit instead). Bring it indoors before frost; water left inside can freeze and crack it. Replace batteries every season.",
   },
   {
     slug: "bsv-ic305-reservoir-drip-kit",
+    sortOrder: 20,
     sku: "BSV-IC305",
     name: "BSV-IC305 Reservoir-Fed Drip Kit",
     shortName: "BSV-IC305 Kit",
@@ -126,12 +81,15 @@ export const products: Product[] = [
     ],
     inTheBox: ["Control unit with pump & timer", "Intake hose with filter", "Distribution tubing", "Drip emitters & stakes", "Connectors", "User manual"],
     images: [],
+    videos: [],
+    status: "published",
     illustration: "kit",
     assistantNotes:
       "There is no water-level sensor — customers should check the reservoir regularly; an empty reservoir is the most common reason for no flow. Keep the intake filter clean. Exact tubing length, number of drip outlets and power supply: not confirmed yet — offer to have the team confirm.",
   },
   {
     slug: "bsv-ic006-high-capacity-reservoir-kit",
+    sortOrder: 30,
     sku: "BSV-IC006",
     name: "BSV-IC006 Higher-Capacity Reservoir Kit",
     shortName: "BSV-IC006 Kit",
@@ -161,16 +119,10 @@ export const products: Product[] = [
     ],
     inTheBox: ["Control unit", "Intake hose with filter", "Distribution tubing", "Drip emitters & stakes", "Connectors", "User manual"],
     images: [],
+    videos: [],
+    status: "published",
     illustration: "kit-large",
     assistantNotes:
       "Recommend over the BSV-IC305 when the customer has many plants (roughly 15+ pots), raised beds, or will be away a long time. Exact capacity, number of outlets and power source (some listings say solar-powered): not confirmed yet — offer to have the team confirm.",
   },
 ];
-
-export function getProduct(slug: string) {
-  return products.find((p) => p.slug === slug);
-}
-
-export function getProductBySku(sku: string) {
-  return products.find((p) => p.sku.toLowerCase() === sku.toLowerCase());
-}

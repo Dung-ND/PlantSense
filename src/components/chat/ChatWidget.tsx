@@ -4,8 +4,8 @@ import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Bot, CircleCheck, Loader2, MessageCircle, RotateCcw, Send, ShoppingCart, X } from "lucide-react";
 import { site } from "@/config/site";
-import { getProduct } from "@/data/products";
 import { useCart } from "@/lib/cart";
+import { useCatalog } from "@/lib/catalog-context";
 import { Markdown } from "@/components/chat/Markdown";
 import type { ChatEvent } from "@/app/api/chat/route";
 
@@ -20,6 +20,7 @@ const SUGGESTIONS = ["Which kit is right for me?", "I don't have an outdoor tap"
 export function ChatWidget() {
   const pathname = usePathname();
   const { add } = useCart();
+  const { bySlug } = useCatalog();
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
@@ -152,7 +153,7 @@ export function ChatWidget() {
             else if (event.type === "lead_saved") notice("Your details were sent to our team — we'll be in touch soon.", "success");
             else if (event.type === "add_to_cart") {
               add(event.slug, event.quantity);
-              notice(`Added ${event.quantity} × ${getProduct(event.slug)?.shortName ?? "item"} to your cart.`, "success");
+              notice(`Added ${event.quantity} × ${bySlug.get(event.slug)?.shortName ?? "item"} to your cart.`, "success");
             } else if (event.type === "error") notice(event.message, "error");
           }
         }
@@ -163,7 +164,7 @@ export function ChatWidget() {
         abortRef.current = null;
       }
     },
-    [busy, messages, sessionId, pathname, add],
+    [busy, messages, sessionId, pathname, add, bySlug],
   );
 
   const reset = () => {

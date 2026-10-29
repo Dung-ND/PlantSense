@@ -1,8 +1,9 @@
 import type { MetadataRoute } from "next";
 import { site } from "@/config/site";
-import { products } from "@/data/products";
+import { getProducts } from "@/lib/products/catalog";
 
-export default function sitemap(): MetadataRoute.Sitemap {
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  const products = await getProducts();
   const pages = ["", "/products", "/faq", "/contact"];
   return [
     ...pages.map((p) => ({ url: `${site.url}${p}` })),

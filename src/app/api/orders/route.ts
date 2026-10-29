@@ -2,6 +2,7 @@ import { z } from "zod";
 import { site } from "@/config/site";
 import { saveSubmission } from "@/lib/leads";
 import { MAX_QTY, priceCart } from "@/lib/pricing";
+import { getProducts } from "@/lib/products/catalog";
 import { clientKey, rateLimit } from "@/lib/rate-limit";
 
 const orderSchema = z.object({
@@ -27,7 +28,7 @@ export async function POST(req: Request) {
     return Response.json({ error: "Please check the highlighted fields.", issues: parsed.error.issues }, { status: 400 });
   }
 
-  const totals = priceCart(parsed.data.items);
+  const totals = priceCart(parsed.data.items, await getProducts());
   if (totals.items.length === 0) return Response.json({ error: "Your cart is empty." }, { status: 400 });
   const unavailable = totals.items.find((i) => !i.product.inStock);
   if (unavailable) return Response.json({ error: `${unavailable.product.name} is out of stock.` }, { status: 409 });

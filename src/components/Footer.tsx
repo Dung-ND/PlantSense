@@ -1,9 +1,10 @@
 import Link from "next/link";
 import { Clock, Mail, Phone, Sprout } from "lucide-react";
 import { site } from "@/config/site";
-import { products } from "@/data/products";
+import { getProducts } from "@/lib/products/catalog";
 
-export function Footer() {
+export async function Footer() {
+  const products = (await getProducts()).slice(0, 6);
   return (
     <footer className="mt-24 border-t border-line bg-leaf-900 text-leaf-100">
       <div className="container-page grid gap-10 py-14 sm:grid-cols-2 lg:grid-cols-4">

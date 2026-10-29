@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
-import { products } from "@/data/products";
+import { getProducts } from "@/lib/products/catalog";
 import { ProductBrowser } from "@/components/ProductBrowser";
 import { ProductCard } from "@/components/ProductCard";
 
@@ -9,7 +9,8 @@ export const metadata: Metadata = {
   description: "Tap timers and reservoir-fed drip kits for balconies, gardens and greenhouses.",
 };
 
-export default function ProductsPage() {
+export default async function ProductsPage() {
+  const products = await getProducts();
   return (
     <div className="container-page py-12">
       <p className="eyebrow">Shop</p>
@@ -25,7 +26,7 @@ export default function ProductsPage() {
           </div>
         }
       >
-        <ProductBrowser />
+        <ProductBrowser products={products} />
       </Suspense>
     </div>
   );

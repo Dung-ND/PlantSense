@@ -1,7 +1,7 @@
 "use client";
 
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { categories, products, type Category } from "@/data/products";
+import { categoryDescription, categoryLabel, type Product } from "@/lib/products/schema";
 import { ProductCard } from "@/components/ProductCard";
 
 const sorts = {
@@ -11,12 +11,12 @@ const sorts = {
 } as const;
 type Sort = keyof typeof sorts;
 
-export function ProductBrowser() {
+export function ProductBrowser({ products }: { products: Product[] }) {
   const params = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
 
-  const category = (params.get("category") as Category | null) ?? null;
+  const category = params.get("category");
   const sort = (params.get("sort") as Sort | null) ?? "featured";
 
   const update = (key: string, value: string | null) => {
@@ -30,9 +30,9 @@ export function ProductBrowser() {
     .filter((p) => !category || p.category === category)
     .toSorted((a, b) => (sort === "price-asc" ? a.price - b.price : sort === "price-desc" ? b.price - a.price : 0));
 
-  const filters: { value: Category | null; label: string }[] = [
+  const filters: { value: string | null; label: string }[] = [
     { value: null, label: "All" },
-    ...(Object.keys(categories) as Category[]).map((c) => ({ value: c, label: categories[c].label })),
+    ...[...new Set(products.map((p) => p.category))].map((c) => ({ value: c, label: categoryLabel(c) })),
   ];
 
   return (
@@ -66,7 +66,7 @@ export function ProductBrowser() {
         </label>
       </div>
 
-      {category && <p className="mt-4 text-sm text-muted">{categories[category]?.description}</p>}
+      {category && categoryDescription(category) && <p className="mt-4 text-sm text-muted">{categoryDescription(category)}</p>}
       <p className="sr-only" aria-live="polite">{list.length} products shown</p>
 
       {list.length > 0 ? (

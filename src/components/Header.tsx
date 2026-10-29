@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import { Menu, ShoppingCart, Sprout, X } from "lucide-react";
 import { site } from "@/config/site";
 import { useCart } from "@/lib/cart";
@@ -17,8 +17,17 @@ const nav = [
 ];
 
 export function Header() {
-  const { count, ready } = useCart();
-  const pathname = usePathname();
+  return <HeaderView pathname={usePathname()} />;
+}
+
+/** Same header without reading the URL — used while a freshly rendered page streams in. */
+const noopSubscribe = () => () => {};
+
+export function HeaderView({ pathname }: { pathname: string }) {
+  const cart = useCart();
+  // False while hydrating, so the server HTML (empty cart) always matches; the saved count appears right after.
+  const hydrated = useSyncExternalStore(noopSubscribe, () => true, () => false);
+  const count = hydrated && cart.ready ? cart.count : 0;
   const [open, setOpen] = useState(false);
 
   // Close the mobile menu after navigating
@@ -73,7 +82,7 @@ export function Header() {
             aria-label={`Cart, ${count} ${count === 1 ? "item" : "items"}`}
           >
             <ShoppingCart className="size-5" aria-hidden />
-            {ready && count > 0 && (
+            {count > 0 && (
               <span className="absolute top-1 right-0.5 grid min-w-5 place-items-center rounded-full bg-leaf-600 px-1 text-[11px] leading-5 font-bold text-white">
                 {count}
               </span>

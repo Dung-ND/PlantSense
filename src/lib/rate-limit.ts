@@ -22,5 +22,6 @@ export function rateLimit(key: string, limit: number, windowMs: number) {
 }
 
 export function clientKey(req: Request) {
-  return req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || req.headers.get("x-real-ip") || "anonymous";
+  // Behind Cloudflare the real visitor IP is in cf-connecting-ip.
+  return req.headers.get("cf-connecting-ip") || req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || req.headers.get("x-real-ip") || "anonymous";
 }

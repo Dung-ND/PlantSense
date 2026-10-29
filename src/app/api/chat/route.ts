@@ -1,7 +1,7 @@
 import OpenAI from "openai";
 import type { ChatCompletionMessageParam } from "openai/resources/chat/completions";
 import { z } from "zod";
-import { getProductBySku } from "@/data/products";
+import { getProductBySku, getProducts } from "@/lib/products/catalog";
 import { assistantTools, buildSystemPrompt } from "@/lib/assistant";
 import { saveSubmission } from "@/lib/leads";
 import { clientKey, rateLimit } from "@/lib/rate-limit";
@@ -59,8 +59,10 @@ export async function POST(req: Request) {
   const client = new OpenAI({ apiKey, baseURL: process.env.OPENAI_BASE_URL || undefined });
   const model = process.env.OPENAI_MODEL || "gpt-4.1-mini";
 
+  const products = await getProducts();
+  const tools = assistantTools(products);
   const conversation: ChatCompletionMessageParam[] = [
-    { role: "system", content: buildSystemPrompt(page) },
+    { role: "system", content: buildSystemPrompt(products, page) },
     // Keep the most recent turns only, to bound cost.
     ...messages.slice(-20),
   ];
@@ -73,7 +75,7 @@ export async function POST(req: Request) {
       try {
         for (let round = 0; round < MAX_TOOL_ROUNDS; round++) {
           const completion = await client.chat.completions.create(
-            { model, messages: conversation, tools: assistantTools, stream: true, max_completion_tokens: 600 },
+            { model, messages: conversation, tools, stream: true, max_completion_tokens: 600 },
             { signal: req.signal },
           );
 
@@ -156,7 +158,7 @@ async function runTool(
 
   if (name === "add_to_cart") {
     const input = z.object({ sku: z.string(), quantity: z.number().int().min(1).max(20) }).safeParse(args);
-    const product = input.success ? getProductBySku(input.data.sku) : undefined;
+    const product = input.success ? await getProductBySku(input.data.sku) : null;
     if (!input.success || !product) return { ok: false, error: "Unknown product." };
     if (!product.inStock) return { ok: false, error: "That product is out of stock." };
     ctx.send({ type: "add_to_cart", slug: product.slug, quantity: input.data.quantity });

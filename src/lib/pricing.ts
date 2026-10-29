@@ -1,5 +1,4 @@
 import { site } from "@/config/site";
-import { getProduct } from "@/data/products";
 
 export interface CartLine {
   slug: string;
@@ -8,10 +7,16 @@ export interface CartLine {
 
 export const MAX_QTY = 20;
 
-/** Prices always come from the catalog, never from the client. */
-export function priceCart(lines: CartLine[]) {
+interface Priceable {
+  slug: string;
+  price: number;
+}
+
+/** Prices always come from the catalog passed in, never from the client's cart data. */
+export function priceCart<P extends Priceable>(lines: CartLine[], catalog: readonly P[]) {
+  const bySlug = new Map(catalog.map((p) => [p.slug, p]));
   const items = lines.flatMap((line) => {
-    const product = getProduct(line.slug);
+    const product = bySlug.get(line.slug);
     if (!product) return [];
     const quantity = Math.min(Math.max(1, Math.floor(line.quantity)), MAX_QTY);
     return [{ product, quantity, lineTotal: round(product.price * quantity) }];

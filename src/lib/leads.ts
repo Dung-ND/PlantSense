@@ -1,6 +1,7 @@
 import "server-only";
 import { appendFile, mkdir } from "node:fs/promises";
 import path from "node:path";
+import { DATA_DIR } from "@/lib/db";
 
 export type SubmissionKind = "order" | "contact" | "chat-lead";
 
@@ -17,8 +18,7 @@ export interface Submission {
  * - If LEAD_WEBHOOK_URL is set, each submission is POSTed there as JSON
  *   (works with Zapier, Make, n8n, Google Apps Script, Slack/Discord bridges…).
  * - Otherwise (or additionally, when SAVE_SUBMISSIONS_TO_FILE=true) it is appended
- *   to data/submissions.jsonl — handy in development and on your own server.
- *   Serverless hosts (e.g. Vercel) have no persistent disk, so use the webhook there.
+ *   to DATA_DIR/submissions.jsonl.
  */
 export async function saveSubmission(kind: SubmissionKind, data: Record<string, unknown>): Promise<Submission> {
   const submission: Submission = {
@@ -45,8 +45,7 @@ export async function saveSubmission(kind: SubmissionKind, data: Record<string, 
     );
   }
   if (toFile) {
-    const dir = path.join(process.cwd(), "data");
-    tasks.push(mkdir(dir, { recursive: true }).then(() => appendFile(path.join(dir, "submissions.jsonl"), JSON.stringify(submission) + "\n")));
+    tasks.push(mkdir(DATA_DIR, { recursive: true }).then(() => appendFile(path.join(DATA_DIR, "submissions.jsonl"), JSON.stringify(submission) + "\n")));
   }
 
   const results = await Promise.allSettled(tasks);
